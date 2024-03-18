@@ -1732,3 +1732,16 @@ RELEASE_ALL_LOCKS()
 SELECT LOCK_MODE, LOCK_TYPE, TABLE_SCHEMA
 FROM information_schema.metadata_lock_info WHERE thread_id>0 ORDER BY TABLE_SCHEMA;
 LOCK_MODE	LOCK_TYPE	TABLE_SCHEMA
+#
+# MDEV-10569 Add RELEASE_ALL_LOCKS SQL-function
+#
+set @@rand_seed1=31415926,@@rand_seed2=2718281828;
+create table t1 as WITH cte AS (SELECT UUID() as r  FROM seq_1_to_10)
+SELECT r as r1, r FROM cte;
+select count(*) from t1 where r1!=r;
+count(*)
+0
+drop table t1;
+#
+# End of 10.5 tests
+#

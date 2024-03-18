@@ -5302,6 +5302,7 @@ Create_func_uuid::create_builder(THD *thd)
   DBUG_ENTER("Create_func_uuid::create");
   thd->lex->set_stmt_unsafe(LEX::BINLOG_STMT_UNSAFE_SYSTEM_FUNCTION);
   thd->lex->safe_to_cache_query= 0;
+  thd->lex->uncacheable(UNCACHEABLE_RAND);
   DBUG_RETURN(new (thd->mem_root) Item_func_uuid(thd));
 }
 
@@ -5314,6 +5315,7 @@ Create_func_uuid_short::create_builder(THD *thd)
   DBUG_ENTER("Create_func_uuid_short::create");
   thd->lex->set_stmt_unsafe(LEX::BINLOG_STMT_UNSAFE_SYSTEM_FUNCTION);
   thd->lex->safe_to_cache_query= 0;
+  thd->lex->uncacheable(UNCACHEABLE_RAND);
   DBUG_RETURN(new (thd->mem_root) Item_func_uuid_short(thd));
 }
 
