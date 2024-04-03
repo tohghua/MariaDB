@@ -1108,6 +1108,9 @@ private:
 
 class JOIN :public Sql_alloc
 {
+public:
+  bool insubq{false};
+
 private:
   JOIN(const JOIN &rhs);                        /**< not implemented */
   JOIN& operator=(const JOIN &rhs);             /**< not implemented */

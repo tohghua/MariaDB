@@ -14174,10 +14174,13 @@ void JOIN::join_free()
   SELECT_LEX_UNIT *tmp_unit;
   SELECT_LEX *sl;
   /*
-    Optimization: if not EXPLAIN and we are done with the JOIN,
-    free all tables.
+    Optimization: If not EXPLAIN and we are done with the JOIN,
+    free all tables.  If we're in a subquery, then we're not necessarily
+    done with the join yet.  It'll get cleaned-up during join->destroy()
+    during st_select_lex_unit::cleanup which does a 'full' cleanup by
+    passing full=true.
   */
-  bool full= !(select_lex->uncacheable) &&  !(thd->lex->describe);
+  bool full= !(select_lex->uncacheable) && !(thd->lex->describe) && !insubq;
   bool can_unlock= full;
   DBUG_ENTER("JOIN::join_free");
 

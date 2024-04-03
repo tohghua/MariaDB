@@ -2246,8 +2246,11 @@ bool st_select_lex_unit::exec()
 	records_at_start= table->file->stats.records;
 	if (sl->tvc)
 	  sl->tvc->exec(sl);
-	else
+	else {
+          sl->join->insubq= true;
 	  sl->join->exec();
+          sl->join->insubq= false;
+        }
         if (sl == union_distinct && !have_except_all_or_intersect_all &&
             !(with_element && with_element->is_recursive))
 	{
