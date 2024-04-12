@@ -4,7 +4,7 @@ connection node_1;
 SET GLOBAL wsrep_load_data_splitting=ON;
 Warnings:
 Warning	1287	'@@wsrep_load_data_splitting' is deprecated and will be removed in a future release
-SET GLOBAL wsrep_replicate_myisam=ON;
+SET GLOBAL wsrep_mode=REPLICATE_MYISAM;
 Warnings:
 Warning	1287	'@@wsrep_replicate_myisam' is deprecated and will be removed in a future release. Please use '@@wsrep_mode=REPLICATE_MYISAM' instead
 CREATE TABLE t1 (c1 int) ENGINE=MYISAM;
@@ -33,6 +33,4 @@ DROP TABLE t1;
 SET GLOBAL wsrep_load_data_splitting=OFF;
 Warnings:
 Warning	1287	'@@wsrep_load_data_splitting' is deprecated and will be removed in a future release
-SET GLOBAL wsrep_replicate_myisam=OFF;
-Warnings:
-Warning	1287	'@@wsrep_replicate_myisam' is deprecated and will be removed in a future release. Please use '@@wsrep_mode=REPLICATE_MYISAM' instead
+SET GLOBAL wsrep_mode=default;
