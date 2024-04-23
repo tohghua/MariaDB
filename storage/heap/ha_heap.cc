@@ -367,7 +367,8 @@ int ha_heap::info(uint flag)
 {
   HEAPINFO hp_info;
 
-  (void) heap_info(file,&hp_info,flag);
+  if (int error= heap_info(file,&hp_info,flag))
+    return error;
 
   errkey=                     hp_info.errkey;
   stats.records=              hp_info.records;
