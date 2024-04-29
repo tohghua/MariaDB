@@ -225,7 +225,6 @@ static bool write_neighbours(TABLE *graph,
 
   graph->field[2]->store_binary(neighbor_array_bytes, total_size);
   graph->file->ha_update_row(graph->record[1], graph->record[0]);
-
   return false;
 }
 
@@ -445,10 +444,10 @@ int mhnsw_insert(TABLE *table, KEY *keyinfo)
   if (res->length() == 0 || res->length() % 4)
     return 1;
 
-  const uint EF_CONSTRUCTION = 10; // max candidate list size to connect to.
-  //const uint MAX_INSERT_NEIGHBOUR_CONNECTIONS = 10;
-  const uint MAX_NEIGHBORS_PER_LAYER = 50; //m
-  const double NORMALIZATION_FACTOR = 1.2;
+  const uint EF_CONSTRUCTION = 200; // max candidate list size to connect to.
+  const uint MAX_INSERT_NEIGHBOR_CONNECTIONS = 24;
+  const uint MAX_NEIGHBORS_PER_LAYER = 24; //m
+  const double NORMALIZATION_FACTOR = 2;
 
   if ((err= h->ha_rnd_init(1)))
     return err;
@@ -522,7 +521,7 @@ int mhnsw_insert(TABLE *table, KEY *keyinfo)
                                           : MAX_NEIGHBORS_PER_LAYER;
 
     select_neighbours(table, graph, target, candidates,
-                      max_neighbours, &neighbours);
+                      MAX_INSERT_NEIGHBOR_CONNECTIONS, &neighbours);
     update_neighbours(table, vec_field, graph, cur_layer, max_neighbours,
                       target, neighbours);
     start_nodes= candidates;
@@ -606,7 +605,7 @@ int mhnsw_first(TABLE *table, KEY *keyinfo, Item *dist, ulonglong limit)
   }
 
   search_layer(table, vec_field, graph, target, start_nodes,
-               limit, 0, &candidates);
+               40, 0, &candidates);
   start_nodes.delete_elements();
 
   // 8. return results
