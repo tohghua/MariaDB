@@ -296,8 +296,9 @@ Storage_engine_name::resolve_storage_engine_with_error(THD *thd,
                                                        handlerton **ha,
                                                        bool tmp_table)
 {
-  if (plugin_ref plugin= ha_resolve_by_name(thd, &m_storage_engine_name,
-                                            tmp_table))
+  plugin_ref plugin= NULL;
+  if ((plugin= ha_resolve_by_name(thd, &m_storage_engine_name, tmp_table)) &&
+      (plugin_ref_to_int(plugin)->state == PLUGIN_IS_READY))
   {
     *ha= plugin_hton(plugin);
     return false;
