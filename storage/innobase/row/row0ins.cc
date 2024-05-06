@@ -2703,22 +2703,43 @@ err_exit:
 
 	DBUG_EXECUTE_IF("row_ins_row_level", goto skip_bulk_insert;);
 
-	if (!(flags & BTR_NO_UNDO_LOG_FLAG)
-	    && page_is_empty(block->page.frame)
-	    && !entry->is_metadata() && !trx->duplicates
-	    && !trx->check_unique_secondary && !trx->check_foreigns
-	    && !trx->dict_operation
-	    && block->page.id().page_no() == index->page
-	    && !index->table->skip_alter_undo
+	if (((!(flags & BTR_NO_UNDO_LOG_FLAG)
+	      && page_is_empty(block->page.frame)
+	      && !entry->is_metadata() && !trx->duplicates
+	      && !trx->check_unique_secondary && !trx->check_foreigns
+	      && !trx->dict_operation
+	      && !index->table->is_active_ddl()
+	      && block->page.id().page_no() == index->page)
+	     || (index->table->skip_alter_undo
+		 && !index->table->is_temporary()
+		 && index->table->foreign_set.empty()))
 	    && !index->table->n_rec_locks
-	    && !index->table->is_active_ddl()
 	    && !index->table->has_spatial_index()
 	    && !index->table->versioned()
             && (!dict_table_is_partition(index->table)
 	        || thd_sql_command(trx->mysql_thd) == SQLCOM_INSERT)) {
 		DEBUG_SYNC_C("empty_root_page_insert");
 
-		trx->bulk_insert = true;
+		if (!index->table->skip_alter_undo) {
+			trx->bulk_insert = true;
+		} else if (!innodb_alter_copy_bulk) {
+			goto skip_bulk_insert;
+		} else {
+			/* This code path has been executed at the
+			start of the alter operation. Consecutive
+			insert operation are buffered in the
+			bulk buffer and doesn't check for constraint
+			validity of foreign key relationship. */
+			trx_start_if_not_started(trx, true);
+			trx->bulk_insert= true;
+			auto m= trx->mod_tables.emplace(
+					index->table, 0);
+			m.first->second.start_bulk_insert(
+					index->table);
+			err= m.first->second.bulk_insert_buffered(
+					*entry, *index, trx);
+			goto err_exit;
+		}
 
 		if (!index->table->is_temporary()) {
 			err = lock_table(index->table, NULL, LOCK_X, thr);
@@ -3387,7 +3408,8 @@ row_ins_index_entry(
 		if (auto t= trx->check_bulk_buffer(index->table)) {
 			/* MDEV-25036 FIXME: check also foreign key
 			constraints */
-			ut_ad(!trx->check_foreigns);
+			ut_ad(index->table->skip_alter_undo
+			      || !trx->check_foreigns);
 			return t->bulk_insert_buffered(*entry, *index, trx);
 		}
 	}
