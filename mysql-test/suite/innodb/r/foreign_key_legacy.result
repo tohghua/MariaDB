@@ -68,13 +68,7 @@ create or replace table D2.t4(x int primary key);
 create or replace table D2.t3(y int references D2.t2(x), z int references D2.t4(x));
 set session debug_dbug= @saved_debug_dbug;
 set session debug_dbug= "+d,fk_create_legacy_storage";
-set global innodb_eval_sql="BEGIN
-INSERT INTO SYS_FOREIGN VALUES ('d2/t2_ibfk_1', 'd2/t2', 'd1/t1', 1);
-INSERT INTO SYS_FOREIGN VALUES ('d2/t3_ibfk_1', 'd2/t3', 'd2/t2', 1);
-INSERT INTO SYS_FOREIGN VALUES ('d2/t3_ibfk_2', 'd2/t3', 'd2/t4', 1);
-INSERT INTO SYS_FOREIGN_COLS VALUES ('d2/t2_ibfk_1', 0, 'y', 'x');
-INSERT INTO SYS_FOREIGN_COLS VALUES ('d2/t3_ibfk_1', 0, 'y', 'x');
-INSERT INTO SYS_FOREIGN_COLS VALUES ('d2/t3_ibfk_2', 0, 'z', 'x');";
+set global innodb_eval_sql=@fk_sql;
 set session debug_dbug= @saved_debug_dbug;
 check table D1.t1, D2.t2;
 Table	Op	Msg_type	Msg_text
@@ -82,7 +76,7 @@ D1.t1	check	status	OK
 D2.t2	check	Note	Found 1 foreign keys
 D2.t2	check	status	OK
 drop database D1;
-ERROR 23000: Cannot delete or update a parent row: a foreign key constraint fails (d2_t2_ibfk_1)
+Got one of the listed errors
 check table D1.t1, D2.t2;
 Table	Op	Msg_type	Msg_text
 D1.t1	check	Note	Found 1 referenced keys
@@ -111,13 +105,7 @@ create or replace table D2.t4(x int primary key);
 create or replace table D2.t3(y int references D2.t2(x), z int references D2.t4(x));
 set session debug_dbug= @saved_debug_dbug;
 set session debug_dbug= "+d,fk_create_legacy_storage";
-set global innodb_eval_sql="BEGIN
-INSERT INTO SYS_FOREIGN VALUES ('d2/t2_ibfk_1', 'd2/t2', 'd1/t1', 1);
-INSERT INTO SYS_FOREIGN VALUES ('d2/t3_ibfk_1', 'd2/t3', 'd2/t2', 1);
-INSERT INTO SYS_FOREIGN VALUES ('d2/t3_ibfk_2', 'd2/t3', 'd2/t4', 1);
-INSERT INTO SYS_FOREIGN_COLS VALUES ('d2/t2_ibfk_1', 0, 'y', 'x');
-INSERT INTO SYS_FOREIGN_COLS VALUES ('d2/t3_ibfk_1', 0, 'y', 'x');
-INSERT INTO SYS_FOREIGN_COLS VALUES ('d2/t3_ibfk_2', 0, 'z', 'x');";
+set global innodb_eval_sql=@fk_sql;
 set session debug_dbug= @saved_debug_dbug;
 drop database D1;
 ERROR 23000: Cannot delete or update a parent row: a foreign key constraint fails

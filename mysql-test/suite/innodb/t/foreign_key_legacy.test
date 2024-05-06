@@ -74,21 +74,40 @@ create or replace table D2.t4(x int primary key);
 create or replace table D2.t3(y int references D2.t2(x), z int references D2.t4(x));
 set session debug_dbug= @saved_debug_dbug;
 
-set session debug_dbug= "+d,fk_create_legacy_storage";
-# FK id must be lowercase as this is the format of SYS_FOREIGN
-# Procedure DROP_DATABASE_PROC relies on that
-set global innodb_eval_sql="BEGIN
+--disable_query_log
+if ($MTR_COMBINATION_LCASE1)
+{
+  # Under lower_case_table_names=1 it does lowercase on FK ids
+  set @fk_sql="BEGIN
 INSERT INTO SYS_FOREIGN VALUES ('d2/t2_ibfk_1', 'd2/t2', 'd1/t1', 1);
 INSERT INTO SYS_FOREIGN VALUES ('d2/t3_ibfk_1', 'd2/t3', 'd2/t2', 1);
 INSERT INTO SYS_FOREIGN VALUES ('d2/t3_ibfk_2', 'd2/t3', 'd2/t4', 1);
 INSERT INTO SYS_FOREIGN_COLS VALUES ('d2/t2_ibfk_1', 0, 'y', 'x');
 INSERT INTO SYS_FOREIGN_COLS VALUES ('d2/t3_ibfk_1', 0, 'y', 'x');
 INSERT INTO SYS_FOREIGN_COLS VALUES ('d2/t3_ibfk_2', 0, 'z', 'x');";
+}
+if (!$MTR_COMBINATION_LCASE1)
+{
+  # Under lower_case_table_names=0 or 2 it keeps FK ids in the original case
+  set @fk_sql="BEGIN
+INSERT INTO SYS_FOREIGN VALUES ('D2/t2_ibfk_1', 'D2/t2', 'D1/t1', 1);
+INSERT INTO SYS_FOREIGN VALUES ('D2/t3_ibfk_1', 'D2/t3', 'D2/t2', 1);
+INSERT INTO SYS_FOREIGN VALUES ('D2/t3_ibfk_2', 'D2/t3', 'D2/t4', 1);
+INSERT INTO SYS_FOREIGN_COLS VALUES ('D2/t2_ibfk_1', 0, 'y', 'x');
+INSERT INTO SYS_FOREIGN_COLS VALUES ('D2/t3_ibfk_1', 0, 'y', 'x');
+INSERT INTO SYS_FOREIGN_COLS VALUES ('D2/t3_ibfk_2', 0, 'z', 'x');";
+}
+--enable_query_log
+
+set session debug_dbug= "+d,fk_create_legacy_storage";
+# FK id must be lowercase as this is the format of SYS_FOREIGN
+# Procedure DROP_DATABASE_PROC relies on that
+set global innodb_eval_sql=@fk_sql;
 set session debug_dbug= @saved_debug_dbug;
 
 --replace_result d1 D1 d2 D2
 check table D1.t1, D2.t2;
---error ER_ROW_IS_REFERENCED_2
+--error ER_ROW_IS_REFERENCED_2,ER_ROW_IS_REFERENCED_2
 drop database D1;
 --replace_result d1 D1 d2 D2
 check table D1.t1, D2.t2;
@@ -113,13 +132,7 @@ create or replace table D2.t3(y int references D2.t2(x), z int references D2.t4(
 set session debug_dbug= @saved_debug_dbug;
 
 set session debug_dbug= "+d,fk_create_legacy_storage";
-set global innodb_eval_sql="BEGIN
-INSERT INTO SYS_FOREIGN VALUES ('d2/t2_ibfk_1', 'd2/t2', 'd1/t1', 1);
-INSERT INTO SYS_FOREIGN VALUES ('d2/t3_ibfk_1', 'd2/t3', 'd2/t2', 1);
-INSERT INTO SYS_FOREIGN VALUES ('d2/t3_ibfk_2', 'd2/t3', 'd2/t4', 1);
-INSERT INTO SYS_FOREIGN_COLS VALUES ('d2/t2_ibfk_1', 0, 'y', 'x');
-INSERT INTO SYS_FOREIGN_COLS VALUES ('d2/t3_ibfk_1', 0, 'y', 'x');
-INSERT INTO SYS_FOREIGN_COLS VALUES ('d2/t3_ibfk_2', 0, 'z', 'x');";
+set global innodb_eval_sql=@fk_sql;
 set session debug_dbug= @saved_debug_dbug;
 
 --error ER_ROW_IS_REFERENCED_2

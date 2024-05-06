@@ -2494,8 +2494,6 @@ static ibool row_drop_table_check_legacy_step(
   ut_a(fld->len < sizeof(d.foreign_name));
   memcpy(d.foreign_name, fld->data, fld->len);
   d.foreign_name[fld->len]= 0;
-  if (lower_case_table_names == 1)
-    innobase_casedn_str(d.foreign_name);
   ut_a(!que_node_get_next(exp));
   if (d.drop_db &&
       dict_tables_have_same_db(d.foreign_name, d.table_name))
